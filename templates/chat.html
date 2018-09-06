@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Boooya - Chat</title>
+
+    <!-- META SECTION -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- END META SECTION -->
+    <!-- CSS INCLUDE -->
+    <link rel="stylesheet" href="{% static "styles.css" %}">
+    <!-- EOF CSS INCLUDE -->
+</head>
+<body>
+
+<!-- APP WRAPPER -->
+<div class="app">
+
+    <!-- START APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- START APP CONTENT -->
+        <div class="app-content">
+            <!-- CONTENT CONTAINER -->
+            <div class="container">
+
+                <div class="block block-condensed">
+                    <div class="block-content" id="msglist">
+
+                        <div class="messages">
+                            <div class="messages-item inbox margin-top-5">
+                                <div class="date">{{ nickname }}님이 입장했습니다.</div>
+                            </div>
+                        </div>
+
+                        <div class="messages">
+                            <div class="messages-item inbox margin-top-5">
+                                <div class="text">test</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="block block-condensed block-arrow-top">
+                    <div class="block-content padding-top-15">
+
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="message" placeholder="Message..." id="msg">
+                            <div class="input-group-btn">
+                                <button class="btn btn-default" id="send_msg" value="Send">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- CONTENT CONTAINER -->
+
+        </div>
+        <!-- END APP CONTENT -->
+
+    </div>
+</div>
+<!-- END APP WRAPPER -->
+
+
+<!-- IMPORTANT SCRIPTS -->
+<script type="text/javascript" src="{% static "vendor/jquery/jquery.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/jquery/jquery-migrate.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/jquery/jquery-ui.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/bootstrap/bootstrap.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/moment/moment.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/customscrollbar/jquery.mCustomScrollbar.min.js" %}"></script>
+<script src="{% static "vendor/sendbird/SendBird.min.js" %}"></script>
+<!-- END IMPORTANT SCRIPTS -->
+<!-- APP SCRIPTS -->
+<script type="text/javascript" src="{% static "js/app.js" %}"></script>
+<script type="text/javascript" src="{% static "js/app_plugins.js" %}"></script>
+<!-- END APP SCRIPTS -->
+<script type="text/javascript">
+
+    {#sb.connect('test1', function (user, error) {#}
+    {#    if (error) {#}
+    {#        console.log('connection error: ', error)#}
+    {#    } else {#}
+    {#        sb.updateCurrentUserInfo('test1-nickname', null, function (response, error) {#}
+    {#            if (error) {#}
+    {#                console.log('userinfo update error: ', error)#}
+    {#            } else {#}
+    {#                sb.OpenChannel.getChannel('rawlabstest', function (channel, error) {#}
+    {#                    if (error) {#}
+    {#                        console.log('get channel failed: ', error)#}
+    {#                    } else {#}
+    {#                        channel.enter(function (response, error) {#}
+    {#                                if (error) {#}
+    {#                                    console.log('entering channel error: ', error)#}
+    {#                                } else {#}
+    {#                                    console.log('enter msg: ', response);#}
+    {#                                }#}
+    {#                            }#}
+    {#                        )#}
+    {#                    }#}
+
+    var sb = new SendBird({'appId': '1CB5C714-0901-407B-A693-4769B5A0F62B'});
+    var sb_channel = null;
+    var sb_handler = null;
+
+    function appendmsg (msg, nickname) {
+        var msg_div = document.createElement('div');
+        msg_div.innerHTML = "<div class=\"messages\"><div class=\"messages-item inbox margin-top-5\"><div class=\"text\">["+nickname+"]"+ msg+"</div></div></div>";
+        document.getElementById("msglist").appendChild(msg_div)
+    }
+
+    function sb_connect (sb) {
+        sb.connect('{{ nickname }}', function (user, error) {
+            if (error) {
+                console.error('sb connect error: ', error)
+            } else {
+                console.log(user);
+                sb.updateCurrentUserInfo({{ nickname }}, null, function (response, error) {
+                    if (error) {
+                        console.error('nickname error: ', error)
+                    } else {
+                        console.log('nickname changed: ', response)
+                    }
+                });
+                return true;
+            }
+        })
+    }
+
+    function sb_getchannel (sb, channelUrl) {
+        sb.OpenChannel.getChannel(channelUrl, function (channel, error) {
+            if (error) {
+                console.error('get channel error: ', error);
+            } else {
+                channel.enter(function (response, error) {
+                    if (error) {
+                        console.error('enter channel error: ', error)
+                    } else {
+                        console.log('enter channel success: ', channel);
+                        sb_channel = channel;
+                    }
+                });
+            }
+        })
+    }
+
+    sb_connect(sb);
+    sb_getchannel(sb, 'rawlabstest');
+    sb_handler = new sb.ChannelHandler();
+
+    function sb_sendmsg (channel, msg) {
+        channel.sendUserMessage(msg, function (message, error) {
+            if (error) {
+                console.error('send msg error: ', msg)
+            } else {
+                appendmsg(msg, {{ nickname }});
+                console.log('send message success: ', message)
+            }
+        })
+    }
+
+    $("#send_msg").click(function () {
+        var msg = $("#msg").val();
+        event.preventDefault();
+        if (!msg) {
+            console.log('empty')
+        } else {
+            console.log('success: ', msg);
+            sb_sendmsg(sb_channel, msg);
+        }
+    });
+
+    sb_handler.onMessageReceived = function (channel, message) {
+        var message_body = message['message'];
+        var message_nickname = message['_sender']['nickname'];
+        appendmsg(message_body, message_nickname);
+        console.log('수신: ', channel, message);
+    };
+
+    sb.addChannelHandler('asdfasdfsadf', sb_handler)
+
+</script>
+</body>
+</html>

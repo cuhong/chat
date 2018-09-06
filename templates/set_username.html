@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Boooya - Chat</title>
+
+    <!-- META SECTION -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- END META SECTION -->
+    <!-- CSS INCLUDE -->
+    <link rel="stylesheet" href="{% static "styles.css" %}">
+    <!-- EOF CSS INCLUDE -->
+</head>
+<body>
+
+<!-- APP WRAPPER -->
+<div class="app">
+
+    <!-- START APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- START APP CONTAINER -->
+        <div class="app-container">
+
+            <div class="app-login-box padding-top-15">
+                <div class="app-login-box-title">
+                    <div class="title">닉네임을 입력해주세요.</div>
+                </div>
+                <div class="app-login-box-container">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="{{ form.nickname.id_for_label }}" name="{{ form.nickname.html_name }}" placeholder="닉네임">
+                        </div>
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-12 col-xs-12">
+                                    <button class="btn btn-success btn-block">시작</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        <!-- END APP CONTAINER -->
+
+
+    </div>
+</div>
+<!-- END APP WRAPPER -->
+
+
+<!-- IMPORTANT SCRIPTS -->
+<script type="text/javascript" src="{% static "vendor/jquery/jquery.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/jquery/jquery-migrate.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/jquery/jquery-ui.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/bootstrap/bootstrap.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/moment/moment.min.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/customscrollbar/jquery.mCustomScrollbar.min.js" %}"></script>
+<script src="{% static "vendor/sendbird/SendBird.min.js" %}"></script>
+<!-- END IMPORTANT SCRIPTS -->
+<!-- APP SCRIPTS -->
+<script type="text/javascript" src="{% static "js/app.js" %}"></script>
+<script type="text/javascript" src="{% static "js/app_plugins.js" %}"></script>
+<!-- END APP SCRIPTS -->
+<script type="text/javascript">
+    var sb = new SendBird({'appId': '1CB5C714-0901-407B-A693-4769B5A0F62B'});
+    sb.connect('test1', function (user, error) {
+        if (error) {
+            console.log('connection error: ', error)
+        } else {
+            sb.updateCurrentUserInfo('test1-nickname', null, function (response, error) {
+                if (error) {
+                    console.log('userinfo update error: ', error)
+                } else {
+                    var openChannelListQuery = sb.OpenChannel.createOpenChannelListQuery();
+                    openChannelListQuery.next(function (channels, error) {
+                        if (error) {
+                            console.log(error)
+                        } else {
+                            console.log('channels', channels);
+                            sb.OpenChannel.getChannel('rawlabstest', function (channel, error) {
+                                if (error) {
+                                    console.log('get channel failed: ', error)
+                                } else {
+                                    channel.enter(function (response, error) {
+                                            if (error) {
+                                                console.log('entering channel error: ', error)
+                                            } else {
+                                                console.log('enter msg: ', response);
+                                            }
+                                        }
+                                    )
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+        }
+    });
+
+</script>
+</body>
+</html>
