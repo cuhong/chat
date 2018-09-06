@@ -1,3 +1,5 @@
+import uuid
+
 from django import forms
 from django.shortcuts import render, redirect
 
@@ -24,6 +26,10 @@ class Chat_setusername(View):
             return render(request, reverse('main'))
 
 class Chat(View):
+    def get_session_key(self):
+        session_key = uuid.uuid4()
+        return session_key
+
     def get(self, request, *args, **kwargs):
         if request.session['nickname'] is None:
             return render(request, reverse('main'))

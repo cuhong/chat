@@ -35,12 +35,6 @@
                             </div>
                         </div>
 
-                        <div class="messages">
-                            <div class="messages-item inbox margin-top-5">
-                                <div class="text">test</div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
                 <div class="block block-condensed block-arrow-top">
@@ -51,6 +45,14 @@
                             <div class="input-group-btn">
                                 <button class="btn btn-default" id="send_msg" value="Send">Send</button>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-12 col-xs-12">
+                                    <button class="btn btn-success btn-block" id="exitchat">방 나가기</button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -107,19 +109,24 @@
     var sb_channel = null;
     var sb_handler = null;
 
-    function appendmsg (msg, nickname) {
+    function appendmsg(msg, nickname) {
         var msg_div = document.createElement('div');
-        msg_div.innerHTML = "<div class=\"messages\"><div class=\"messages-item inbox margin-top-5\"><div class=\"text\">["+nickname+"]"+ msg+"</div></div></div>";
+        msg_div.innerHTML = "<div class=\"messages\"><div class=\"messages-item inbox margin-top-5\"><div class=\"text\"> [ " + nickname + " ] " + msg + "</div></div></div>";
         document.getElementById("msglist").appendChild(msg_div)
     }
 
-    function sb_connect (sb) {
+    function appendsysmsg(msg) {
+        var msg_div = document.createElement('div');
+        msg_div.innerHTML = "<div class=\"messages\"><div class=\"messages-item inbox margin-top-5\"><div class=\"date\">" + msg + "</div></div></div>";
+    }
+
+    function sb_connect(sb) {
         sb.connect('{{ nickname }}', function (user, error) {
             if (error) {
                 console.error('sb connect error: ', error)
             } else {
                 console.log(user);
-                sb.updateCurrentUserInfo({{ nickname }}, null, function (response, error) {
+                sb.updateCurrentUserInfo('{{ nickname }}', null, function (response, error) {
                     if (error) {
                         console.error('nickname error: ', error)
                     } else {
@@ -131,7 +138,7 @@
         })
     }
 
-    function sb_getchannel (sb, channelUrl) {
+    function sb_getchannel(sb, channelUrl) {
         sb.OpenChannel.getChannel(channelUrl, function (channel, error) {
             if (error) {
                 console.error('get channel error: ', error);
@@ -148,30 +155,69 @@
         })
     }
 
+    function sb_leavechannel(sb, channelUrl) {
+        sb.OpenChannel.getChannel(channelUrl, function (channel, error) {
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            channel.exit(function (response, error) {
+                if (error) {
+                    console.error(error);
+                    return;
+                } else {
+                    window.location.href='{% url "main" %}';
+                }
+            })
+        })
+    }
+
     sb_connect(sb);
     sb_getchannel(sb, 'rawlabstest');
     sb_handler = new sb.ChannelHandler();
 
-    function sb_sendmsg (channel, msg) {
+
+    function sb_sendmsg(channel, msg) {
         channel.sendUserMessage(msg, function (message, error) {
             if (error) {
                 console.error('send msg error: ', msg)
             } else {
-                appendmsg(msg, {{ nickname }});
+                appendmsg(msg, '{{ nickname }}');
                 console.log('send message success: ', message)
             }
         })
     }
 
-    $("#send_msg").click(function () {
-        var msg = $("#msg").val();
+    $("#send_msg").click(function (event) {
+        var msg = $("#msg");
         event.preventDefault();
         if (!msg) {
             console.log('empty')
         } else {
-            console.log('success: ', msg);
-            sb_sendmsg(sb_channel, msg);
+            console.log('success: ', msg.val());
+            sb_sendmsg(sb_channel, msg.val());
+            msg.val('');
         }
+    });
+
+    $("#msg").keydown(function (event) {
+        var msg = $("#msg");
+        if (event.keyCode == '13') {
+            event.preventDefault();
+            if (!msg) {
+                console.log('empty')
+            } else {
+                console.log('success: ', msg.val());
+                sb_sendmsg(sb_channel, msg.val());
+                msg.val('');
+            }
+        }
+    });
+
+    $("#exitchat").click(function (event) {
+        event.preventDefault();
+        sb_leavechannel(sb, 'rawlabstest');
     });
 
     sb_handler.onMessageReceived = function (channel, message) {
@@ -181,7 +227,11 @@
         console.log('수신: ', channel, message);
     };
 
-    sb.addChannelHandler('asdfasdfsadf', sb_handler)
+    sb_handler.onUserJoined = function (channel, user) {
+        console.log('userjoin', user)
+    };
+
+    sb.addChannelHandler('{{ view.get_session_key }}', sb_handler);
 
 </script>
 </body>
