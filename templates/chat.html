@@ -29,12 +29,6 @@
                 <div class="block block-condensed">
                     <div class="block-content" id="msglist">
 
-                        <div class="messages">
-                            <div class="messages-item inbox margin-top-5">
-                                <div class="date">{{ nickname }}님이 입장했습니다.</div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
                 <div class="block block-condensed block-arrow-top">
@@ -118,6 +112,7 @@
     function appendsysmsg(msg) {
         var msg_div = document.createElement('div');
         msg_div.innerHTML = "<div class=\"messages\"><div class=\"messages-item inbox margin-top-5\"><div class=\"date\">" + msg + "</div></div></div>";
+        document.getElementById("msglist").appendChild(msg_div)
     }
 
     function sb_connect(sb) {
@@ -227,8 +222,16 @@
         console.log('수신: ', channel, message);
     };
 
-    sb_handler.onUserJoined = function (channel, user) {
-        console.log('userjoin', user)
+    sb_handler.onUserEntered = function (channel, user) {
+        console.log('userjoin: ', user);
+        username = user['nickname'];
+        appendsysmsg('[ '+ username + ' ]' + ' 님이 입장했습니다.')
+    };
+
+    sb_handler.onUserExited = function (channel, user) {
+        console.log('userjoin: ', user);
+        username = user['nickname'];
+        appendsysmsg('[ '+ username + ' ]' + ' 님이 퇴장했습니다.')
     };
 
     sb.addChannelHandler('{{ view.get_session_key }}', sb_handler);

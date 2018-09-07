@@ -68,43 +68,6 @@
 <script type="text/javascript" src="{% static "js/app.js" %}"></script>
 <script type="text/javascript" src="{% static "js/app_plugins.js" %}"></script>
 <!-- END APP SCRIPTS -->
-<script type="text/javascript">
-    var sb = new SendBird({'appId': '1CB5C714-0901-407B-A693-4769B5A0F62B'});
-    sb.connect('test1', function (user, error) {
-        if (error) {
-            console.log('connection error: ', error)
-        } else {
-            sb.updateCurrentUserInfo('test1-nickname', null, function (response, error) {
-                if (error) {
-                    console.log('userinfo update error: ', error)
-                } else {
-                    var openChannelListQuery = sb.OpenChannel.createOpenChannelListQuery();
-                    openChannelListQuery.next(function (channels, error) {
-                        if (error) {
-                            console.log(error)
-                        } else {
-                            console.log('channels', channels);
-                            sb.OpenChannel.getChannel('rawlabstest', function (channel, error) {
-                                if (error) {
-                                    console.log('get channel failed: ', error)
-                                } else {
-                                    channel.enter(function (response, error) {
-                                            if (error) {
-                                                console.log('entering channel error: ', error)
-                                            } else {
-                                                console.log('enter msg: ', response);
-                                            }
-                                        }
-                                    )
-                                }
-                            })
-                        }
-                    })
-                }
-            })
-        }
-    });
 
-</script>
 </body>
 </html>
